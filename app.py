@@ -1,7 +1,6 @@
 import streamlit as st
 from prophet import Prophet
 import pandas as pd
-import numpy as np
 
 
 # Function to prepare data for Prophet
@@ -35,15 +34,16 @@ def main():
     def load_data():
         # Example: Load your dataframe here
         df = pd.read_csv(
-            "./dataset/DataTrainSIOHIFull.csv"
+            "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/DataTrainSIOHIFull.csv"
         )  # Replace with your data loading logic
         return df
 
     df = load_data()
 
-    # Show a preview of the data
+    # Show a preview of the data and column names
     st.subheader("Data Preview")
     st.write(df.head())
+    st.write(df.columns)  # Check the columns in your DataFrame
 
     # Forecasting with Prophet
     st.subheader(f"Forecasting for the next {num_days_to_forecast} days")
