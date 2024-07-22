@@ -38,21 +38,70 @@ def plot_average_leafcount_per_day(df):
 
 
 def main():
+
     st.markdown("<h1 style='text-align: center;'>Hydrosim</h1>", unsafe_allow_html=True)
     st.markdown(
-        "<h3 style='text-align: center;'>Dashboard Ramalan Pertumbuhan Tanaman Selada dan Kualitas Tanaman Selada</h3>",
+        "<h3 style='text-align: center;'>Dashboard Ramalan Pertumbuhan Tanaman Dengan Algoritma Prophet</h3>",
         unsafe_allow_html=True,
     )
 
-    st.write("**Petunjuk Sebelum Memasukkan File CSV:**")
-    st.write(
-        "- Pastikan file CSV memiliki kolom yang sesuai (datetime, LeafCount, hole, temperature, humidity, light, pH, EC, TDS, WaterTemp)."
+    st.markdown(
+        "Proyek ini bertujuan untuk melakukan **peramalan pertumbuhan tanaman hidroponik** menggunakan data historis mengenai jumlah daun dan berbagai variabel lingkungan seperti suhu, kelembapan, cahaya, pH, dan lainnya."
     )
-    st.write(
-        "- Format kolom 'datetime' harus dalam format datetime (contoh: 'YYYY-MM-DD HH:MM:SS')."
+
+    st.markdown("#### **Metodologi dan Kinerja Model:**")
+
+    # Membuat dua kolom
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("- **RMSE (Root Mean Square Error)**: 1.8057961508619482")
+        st.markdown("- **MAE (Mean Absolute Error)**: 1.3954133718850414")
+
+    with col2:
+        st.markdown("- **Jumlah data latih (df_train)**: 8000")
+        st.markdown("- **Jumlah data uji (df_test)**: 6400")
+
+    st.markdown("#### **Fitur utama dari aplikasi ini meliputi:**")
+
+    # Membuat dua kolom
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.markdown(
+            "- **Unggah file CSV**: Mengunggah file yang berisi data tanaman hidroponik."
+        )
+        st.markdown(
+            "- **Pengolahan data**: Memeriksa dan memproses data untuk memastikan format dan kolom yang diperlukan sudah benar."
+        )
+        st.markdown(
+            "- **Visualisasi data**: Menampilkan grafik rata-rata jumlah daun per hari dan hasil ramalan untuk periode yang akan datang."
+        )
+
+    with col4:
+        st.markdown(
+            "- **Informasi variabel**: Menampilkan informasi dan statistik tentang variabel lingkungan yang mempengaruhi pertumbuhan tanaman."
+        )
+        st.markdown(
+            "- **Peramalan menggunakan model Prophet**: Menggunakan algoritma Prophet untuk meramalkan pertumbuhan daun berdasarkan data historis. Prophet adalah model peramalan yang dikembangkan oleh Facebook, dirancang untuk menangani data yang memiliki pola musiman dan tren yang kuat."
+        )
+
+    st.markdown(
+        "Harap pastikan bahwa data yang diunggah memenuhi syarat yang disebutkan untuk hasil yang akurat dan bermanfaat."
     )
-    st.write(
-        "- Dataset harus memiliki data yang lengkap untuk akurasi yang lebih baik."
+
+    st.markdown("### **Petunjuk Sebelum Memasukkan File CSV:**")
+    st.markdown(
+        "- **Pastikan file CSV Anda memiliki kolom yang diperlukan**, yaitu: `datetime`, `LeafCount`, `hole`, `temperature`, `humidity`, `light`, `pH`, `EC`, `TDS`, dan `WaterTemp`."
+    )
+    st.markdown(
+        "- **Format kolom 'datetime' harus sesuai dengan format datetime standar**, yaitu `YYYY-MM-DD HH:MM:SS`. Contoh: `2024-07-22 14:30:00`."
+    )
+    st.markdown(
+        "- **Pastikan dataset Anda mencakup data yang cukup untuk akurasi ramalan yang optimal**. Data yang dimasukkan harus mencakup **minimal `10` hari dan maksimal `60` hari**."
+    )
+    st.markdown(
+        "- Jika kolom 'datetime' tidak ada, sistem akan mencoba membuatnya dari kolom `day` dan `time`."
     )
 
     st.write("### Unggah File CSV")
@@ -137,12 +186,12 @@ def main():
         unique_days = df["datetime"].dt.date.nunique()
 
         st.write(f"Hari yang ada pada dataset: {unique_days} hari")
-        st.write("Hari yang dimasukkan minimal 1 Hari, dan maksimal 365 Hari")
+        st.write("Hari yang dimasukkan minimal 10 Hari, dan maksimal 60 Hari")
 
         periods = st.number_input(
             "Masukkan jumlah hari yang ingin diprediksi:",
-            min_value=1,
-            max_value=365,
+            min_value=10,
+            max_value=60,
             value=unique_days,  # set default to the number of unique days in the CSV
             step=1,
         )
