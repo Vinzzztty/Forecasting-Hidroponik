@@ -38,15 +38,23 @@ def plot_average_leafcount_per_day(df):
 
 
 def main():
-
-    st.markdown("<h1 style='text-align: center;'>Hydrosim</h1>", unsafe_allow_html=True)
     st.markdown(
-        "<h3 style='text-align: center;'>Dashboard Ramalan Pertumbuhan Tanaman Dengan Algoritma Prophet</h3>",
+        """
+        <style>
+        .header-image {
+            width: 100%;
+            height: auto;
+        }
+        </style>
+        <h1 style='text-align: center;'>Hydrosim</h1>
+        <img src='https://img.idxchannel.com/media/700/images/idx/2022/03/03/Estimasi_biaya_instalasi_hidroponik.jpg' class='header-image'/>
+        <h3 style='text-align: center;'>Dashboard Ramalan Pertumbuhan Tanaman Dengan Algoritma Prophet</h3>
+        """,
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        "Proyek ini bertujuan untuk melakukan **peramalan pertumbuhan tanaman hidroponik** menggunakan data historis mengenai jumlah daun dan berbagai variabel lingkungan seperti suhu, kelembapan, cahaya, pH, dan lainnya."
+        "Proyek ini bertujuan untuk melakukan **peramalan pertumbuhan tanaman hidroponik** menggunakan data historis mengenai jumlah daun dan berbagai variabel lingkungan seperti suhu, kelembapan, cahaya, pH, dan lainnya. Data yang diupload ini merupakan data minimal 5 hari setelah Tanam (HST)"
     )
 
     st.markdown("#### **Metodologi dan Kinerja Model:**")
@@ -98,7 +106,7 @@ def main():
         "- **Format kolom 'datetime' harus sesuai dengan format datetime standar**, yaitu `YYYY-MM-DD HH:MM:SS`. Contoh: `2024-07-22 14:30:00`."
     )
     st.markdown(
-        "- **Pastikan dataset Anda mencakup data yang cukup untuk akurasi ramalan yang optimal**. Data yang dimasukkan harus mencakup **minimal `10` hari dan maksimal `60` hari**."
+        "- **Pastikan dataset Anda mencakup data yang cukup untuk akurasi ramalan yang optimal**. Data yang dimasukkan harus mencakup **minimal `5` hari dan maksimal `40` hari**."
     )
     st.markdown(
         "- Jika kolom 'datetime' tidak ada, sistem akan mencoba membuatnya dari kolom `day` dan `time`."
@@ -190,8 +198,8 @@ def main():
 
         periods = st.number_input(
             "Masukkan jumlah hari yang ingin diprediksi:",
-            min_value=10,
-            max_value=60,
+            min_value=5,
+            max_value=40,
             value=unique_days,  # set default to the number of unique days in the CSV
             step=1,
         )

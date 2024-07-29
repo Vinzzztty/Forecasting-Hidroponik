@@ -4,3 +4,4 @@ app_v1.py
 app.py
 app copy.py
 requirements.backup.txt
+__pycache__
