@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from utils import prepare_data, create_future_dataframe
 from model import load_model, make_predictions
-from visualization import plot_forecast, display_hydroponics_info, display_variable_info
+from visualization import plot_forecast, display_variable_info
 import matplotlib.pyplot as plt
 
 
@@ -185,11 +185,36 @@ def main():
 
         # Load model
         model = load_model("./model/prophet_model.pkl")
-        print(model)
 
         unique_days = df["datetime"].dt.date.nunique()
 
         st.write(f"Hari yang ada pada dataset: {unique_days} hari")
+
+        future = model.make_future_dataframe(periods=unique_days, freq="D")
+
+        # Assuming the cap value used in training was 18
+        future["cap"] = 18
+
+        # Fill in the future DataFrame with the last known values of the regressors from df_test_prophet
+        future["hole"] = df_prophet["hole"].iloc[-1]
+        future["temperature"] = df_prophet["temperature"].iloc[-1]
+        future["humidity"] = df_prophet["humidity"].iloc[-1]
+        future["light"] = df_prophet["light"].iloc[-1]
+        future["pH"] = df_prophet["pH"].iloc[-1]
+        future["EC"] = df_prophet["EC"].iloc[-1]
+        future["TDS"] = df_prophet["TDS"].iloc[-1]
+        future["WaterTemp"] = df_prophet["WaterTemp"].iloc[-1]
+
+        forecast = model.predict(future)
+
+        # Merge the forecast with the actual test data
+        forecast_test = forecast[forecast["ds"].isin(df_prophet["ds"])]
+        merged = pd.merge(
+            df_prophet,
+            forecast_test[["ds", "yhat", "yhat_lower", "yhat_upper"]],
+            on="ds",
+        )
+
         st.write("Hari yang dimasukkan minimal 5 Hari, dan maksimal 40 Hari")
 
         periods = st.number_input(
@@ -230,7 +255,6 @@ def main():
         fig = plot_forecast(model, forecast, periods)
         st.pyplot(fig)
 
-        display_hydroponics_info(df, periods=periods)
         display_variable_info(df_prophet, forecast)
 
 
