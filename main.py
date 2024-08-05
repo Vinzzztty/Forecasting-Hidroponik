@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from utils import prepare_data, create_future_dataframe
-from model import initialize_model, fit_model, make_predictions
-from visualization import plot_forecast, display_hydroponics_info, display_variable_info
+from model import load_model, make_predictions
+from visualization import plot_forecast, display_variable_info
 import matplotlib.pyplot as plt
 
 
@@ -52,7 +52,6 @@ def main():
         """,
         unsafe_allow_html=True,
     )
-
     st.markdown(
         "Proyek ini bertujuan untuk melakukan **peramalan pertumbuhan tanaman hidroponik** menggunakan data historis mengenai jumlah daun dan berbagai variabel lingkungan seperti suhu, kelembapan, cahaya, pH, dan lainnya. Data yang diupload ini merupakan data minimal 5 hari setelah Tanam (HST)"
     )
@@ -63,8 +62,8 @@ def main():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("- **RMSE (Root Mean Square Error)**: 1.8057961508619482")
-        st.markdown("- **MAE (Mean Absolute Error)**: 1.3954133718850414")
+        st.markdown("- **RMSE (Root Mean Square Error)**: 1.43")
+        st.markdown("- **MAE (Mean Absolute Error)**: 1.16")
 
     with col2:
         st.markdown("- **Jumlah data latih (df_train)**: 8000")
@@ -180,37 +179,67 @@ def main():
         ]
         df = df[important_columns]
 
-        # Plot average leaf count per day
         plot_average_leafcount_per_day(df)
 
-        # Prepare data for Prophet model
         df_prophet = prepare_data(df)
 
-        # Initialize and fit the model
-        model = initialize_model()
-        model = fit_model(model, df_prophet)
+        # Load model
+        model = load_model("./model/prophet_model.pkl")
 
-        # Calculate the number of unique days in the CSV file
         unique_days = df["datetime"].dt.date.nunique()
 
         st.write(f"Hari yang ada pada dataset: {unique_days} hari")
-        st.write("Hari yang dimasukkan minimal 10 Hari, dan maksimal 60 Hari")
+
+        future = model.make_future_dataframe(periods=unique_days, freq="D")
+
+        # Assuming the cap value used in training was 18
+        future["cap"] = 18
+
+        # Fill in the future DataFrame with the last known values of the regressors from df_test_prophet
+        future["hole"] = df_prophet["hole"].iloc[-1]
+        future["temperature"] = df_prophet["temperature"].iloc[-1]
+        future["humidity"] = df_prophet["humidity"].iloc[-1]
+        future["light"] = df_prophet["light"].iloc[-1]
+        future["pH"] = df_prophet["pH"].iloc[-1]
+        future["EC"] = df_prophet["EC"].iloc[-1]
+        future["TDS"] = df_prophet["TDS"].iloc[-1]
+        future["WaterTemp"] = df_prophet["WaterTemp"].iloc[-1]
+
+        forecast = model.predict(future)
+
+        # Merge the forecast with the actual test data
+        forecast_test = forecast[forecast["ds"].isin(df_prophet["ds"])]
+        merged = pd.merge(
+            df_prophet,
+            forecast_test[["ds", "yhat", "yhat_lower", "yhat_upper"]],
+            on="ds",
+        )
+
+        st.write("Hari yang dimasukkan minimal 5 Hari, dan maksimal 40 Hari")
 
         periods = st.number_input(
             "Masukkan jumlah hari yang ingin diprediksi:",
             min_value=5,
             max_value=40,
-            value=unique_days,  # set default to the number of unique days in the CSV
+            value=unique_days,
             step=1,
         )
 
-        # Create future dataframe for forecasting
+        # Add select box for the height of the tanaman
+        height_option = st.selectbox("Pilih berat tanaman (gram):", options=[100, 150])
+
+        # Set cap value based on the selected height option
+        cap = 18 if height_option == 100 else 23
+
+        st.write(f"Cap value set to: {cap}")
+
         future = create_future_dataframe(df_prophet, periods=periods)
 
-        # Make predictions
+        # Assuming the cap value used in training was 18
+        future["cap"] = cap
+
         forecast = make_predictions(model, future)
 
-        # Display forecast results
         st.write(f"## Tabel Prediksi untuk {periods} hari ke depan")
         st.dataframe(
             forecast[
@@ -231,12 +260,9 @@ def main():
             ]
         )
 
-        # Plot forecast
         fig = plot_forecast(model, forecast, periods)
         st.pyplot(fig)
 
-        # Display additional information
-        display_hydroponics_info(df, periods=periods)
         display_variable_info(df_prophet, forecast)
 
 
