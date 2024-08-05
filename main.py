@@ -225,10 +225,18 @@ def main():
             step=1,
         )
 
+        # Add select box for the height of the tanaman
+        height_option = st.selectbox("Pilih berat tanaman (gram):", options=[100, 150])
+
+        # Set cap value based on the selected height option
+        cap = 18 if height_option == 100 else 23
+
+        st.write(f"Cap value set to: {cap}")
+
         future = create_future_dataframe(df_prophet, periods=periods)
 
         # Assuming the cap value used in training was 18
-        future["cap"] = 18
+        future["cap"] = cap
 
         forecast = make_predictions(model, future)
 
