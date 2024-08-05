@@ -1,4 +1,5 @@
 from prophet import Prophet
+import joblib
 
 
 def initialize_model():
@@ -25,3 +26,9 @@ def make_predictions(model, future):
         ["yhat", "yhat_lower", "yhat_upper"]
     ].clip(lower=0)
     return forecast
+
+
+def load_model(model_path):
+    model_loaded = joblib.load(model_path)
+
+    return model_loaded
