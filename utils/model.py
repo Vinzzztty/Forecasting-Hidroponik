@@ -1,19 +1,6 @@
+from prophet import Prophet
 import pandas as pd
-import streamlit as st
-from pandas.plotting import register_matplotlib_converters
-
-register_matplotlib_converters()
-
-
-@st.cache_data
-def load_data():
-    df_train = pd.read_csv(
-        "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dataset_train_final.csv"
-    )
-    df_test = pd.read_csv(
-        "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dataset_test_final.csv"
-    )
-    return df_train, df_test
+import joblib
 
 
 def prepare_data(df):
@@ -31,12 +18,21 @@ def prepare_data(df):
             "WaterTemp",
         ]
     ].copy()
+
     df_prophet.rename(columns={"datetime": "ds", "LeafCount": "y"}, inplace=True)
+
     df_prophet["ds"] = pd.to_datetime(df_prophet["ds"])
+
     return df_prophet
 
 
-def create_future_dataframe(df_test, periods=30):
+def load_model(model_path):
+    model_loaded = joblib.load(model_path)
+
+    return model_loaded
+
+
+def create_future_dataframe(df_test, periods):
     future_dates = pd.date_range(start=df_test["ds"].max(), periods=periods, freq="D")
     last_row = df_test.iloc[-1]
 
@@ -53,3 +49,13 @@ def create_future_dataframe(df_test, periods=30):
     ]:
         future[col] = last_row[col]
     return future
+
+
+def make_predictions(model, future):
+    forecast = model.predict(future)
+    forecast[["yhat", "yhat_lower", "yhat_upper"]] = forecast[
+        ["yhat", "yhat_lower", "yhat_upper"]
+    ].clip(lower=0)
+    return forecast
+
+    return forecast
