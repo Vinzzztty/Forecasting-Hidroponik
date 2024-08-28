@@ -48,6 +48,16 @@ def main():
 
     st.title("Welcome to How to Works Page")
 
+    # Tools used
+    with st.expander("🔨 Tools Yang Digunakan"):
+        st.markdown(
+            """
+        - `Python` (^3.11)
+        - `Streamlit`: Framework dan UI
+        - `Prophet`: Algoritma machine learning untuk Forecasting
+        """
+        )
+
     st.header("📊 Petunjuk Sebelum Memasukkan File CSV:")
 
     st.markdown(

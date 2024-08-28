@@ -65,6 +65,30 @@ def main():
     """
     )
 
+    # Set up the two columns layout with different widths
+    st.header("Kesimpulan")
+    col1, col2 = st.columns([3, 7])  # 70% and 30%
+
+    # Content for the first column
+    with col1:
+        st.markdown(
+            "Model forecasting menggunakan algoritma Prophet menghasilkan metrik evaluasi sebagai berikut:"
+        )
+
+        st.markdown("- **RMSE (Root Mean Square Error)**: 1.82")
+        st.markdown("- **MAE (Mean Absolute Error)**: 1.49")
+
+        st.markdown(
+            "Hasil menunjukkan bahwa model memiliki akurasi yang baik dengan kesalahan prediksi yang relatif rendah."
+        )
+
+    # Content for the second column
+    with col2:
+        st.image(
+            "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/evaluasi_model.png?raw=true",
+            caption="Evaluasi Model",
+        )
+
 
 if __name__ == "__main__":
     main()
