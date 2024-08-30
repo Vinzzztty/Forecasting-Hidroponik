@@ -86,7 +86,7 @@ def main():
     )
 
     st.image(
-        "https://example.com/path/to/your/csv-sample.png",
+        "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/pre-processing-data.png?raw=true",
         caption="Contoh Format CSV",
         use_column_width=True,
     )
