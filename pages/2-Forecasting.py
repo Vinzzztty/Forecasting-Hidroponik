@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils import model, visualization
+from utils import model, visualization, cek_optimization
 from prophet import Prophet
 import matplotlib.pyplot as plt
 import time
@@ -193,7 +193,6 @@ def main():
             )
 
             periods = MAX_DAY - unique_days
-            print(periods)
 
             # Add select box for the height of the tanaman
             height_option = st.selectbox(
@@ -203,7 +202,7 @@ def main():
             # Set cap value based on the selected height option
             new_cap = 18 if height_option == 100 else 23
 
-            st.write(f"Cap value set to: {new_cap}")
+            # st.write(f"Cap value set to: {new_cap}")
 
             future = model.create_future_dataframe(df_prophet, periods=periods)
 
@@ -218,9 +217,10 @@ def main():
 
             with col1:
                 st.write(f"Visualisasi Prediksi")
-                fig = visualization.plot_forecast(models, forecast, periods)
+                fig = visualization.plot_forecast(forecast, periods)
 
-                st.pyplot(fig)
+                # st.pyplot(fig)
+                st.plotly_chart(fig)
 
             with col2:
                 st.write(f"Tabel Prediksi")
@@ -231,16 +231,42 @@ def main():
                             "yhat",
                             "yhat_lower",
                             "yhat_upper",
-                            "hole",
-                            "temperature",
-                            "humidity",
-                            "light",
-                            "pH",
-                            "EC",
-                            "TDS",
-                            "WaterTemp",
+                            # "hole",
+                            # "temperature",
+                            # "humidity",
+                            # "light",
+                            # "pH",
+                            # "EC",
+                            # "TDS",
+                            # "WaterTemp",
                         ]
                     ]
+                )
+            st.markdown(f"#### Kesimpulan")
+
+            conclusion = cek_optimization.summarize_forecast(df, forecast)
+            st.info(f"\n{conclusion}")
+
+            growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
+                visualization.calculate_growth_percentage(df, forecast)
+            )
+
+            fig = visualization.plot_growth_bar(
+                growth_percentage, last_leaf_count, max_forecasted_leaf_count
+            )
+            st.plotly_chart(fig)
+
+            st.markdown("##### Kesimpulan Masing Masing Features")
+
+            suggestions = cek_optimization.check_optimization(merged)
+
+            if suggestions:
+                for suggestion in suggestions:
+                    st.write(suggestion)
+
+            else:
+                st.subheader(
+                    "Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
                 )
 
         else:
@@ -320,7 +346,6 @@ def main():
         )
 
         periods = MAX_DAY - unique_days
-        print(periods)
 
         # Add select box for the height of the tanaman
         height_option = st.selectbox("Pilih berat tanaman (gram):", options=[100, 150])
@@ -328,7 +353,7 @@ def main():
         # Set cap value based on the selected height option
         new_cap = 18 if height_option == 100 else 23
 
-        st.write(f"Cap value set to: {new_cap}")
+        # st.write(f"Cap value set to: {new_cap}")
 
         future = model.create_future_dataframe(df_prophet, periods=periods)
 
@@ -343,9 +368,10 @@ def main():
 
         with col1:
             st.write(f"Visualisasi Prediksi")
-            fig = visualization.plot_forecast(models, forecast, periods)
+            fig = visualization.plot_forecast(forecast, periods)
 
-            st.pyplot(fig)
+            # st.pyplot(fig)
+            st.plotly_chart(fig)
 
         with col2:
             st.write(f"Tabel Prediksi")
@@ -356,16 +382,34 @@ def main():
                         "yhat",
                         "yhat_lower",
                         "yhat_upper",
-                        "hole",
-                        "temperature",
-                        "humidity",
-                        "light",
-                        "pH",
-                        "EC",
-                        "TDS",
-                        "WaterTemp",
                     ]
                 ]
+            )
+
+        st.markdown(f"#### Kesimpulan")
+        conclusion = cek_optimization.summarize_forecast(df, forecast)
+        st.info(f"\n{conclusion}")
+
+        growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
+            visualization.calculate_growth_percentage(df, forecast)
+        )
+
+        fig = visualization.plot_growth_bar(
+            growth_percentage, last_leaf_count, max_forecasted_leaf_count
+        )
+        st.plotly_chart(fig)
+
+        st.markdown("##### Kesimpulan Masing Masing Features")
+
+        suggestions = cek_optimization.check_optimization(merged)
+
+        if suggestions:
+            for suggestion in suggestions:
+                st.write(suggestion)
+
+        else:
+            st.subheader(
+                "Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
             )
 
 
