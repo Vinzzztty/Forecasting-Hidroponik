@@ -57,5 +57,3 @@ def make_predictions(model, future):
         ["yhat", "yhat_lower", "yhat_upper"]
     ].clip(lower=0)
     return forecast
-
-    return forecast
