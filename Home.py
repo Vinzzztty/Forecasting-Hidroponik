@@ -47,15 +47,15 @@ def main():
 
     render_sidebar()
 
-    st.title("Welcome to the Home Page")
-    st.header("Tujuan")
+    st.title("🌿 Welcome to the Home Page")
+    st.header("🎯 Tujuan")
     st.write(
         """
     HydroSim bertujuan untuk **meramalkan pertumbuhan tanaman hidroponik** dengan menggunakan data historis yang meliputi jumlah daun serta variabel lingkungan seperti suhu, kelembapan, cahaya, pH, dan lainnya. Dengan peramalan ini, pengguna dapat mengoptimalkan kondisi pertumbuhan dan meningkatkan hasil panen.
     """
     )
 
-    st.header("Manfaat")
+    st.header("✨ Manfaat")
     st.write(
         """
     - **Prediksi Pertumbuhan**: Memberikan gambaran mengenai perkembangan tanaman hidroponik di masa depan berdasarkan data historis.
@@ -66,7 +66,7 @@ def main():
     )
 
     # Set up the two columns layout with different widths
-    st.header("Kesimpulan")
+    st.header("🔍 Kesimpulan")
     col1, col2 = st.columns([3, 7])  # 70% and 30%
 
     # Content for the first column

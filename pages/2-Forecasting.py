@@ -134,7 +134,9 @@ def main():
                 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
                 if df["datetime"].isnull().any():
-                    st.error("Ada nilai yang tidak bisa dikonversi ke format datetime.")
+                    st.error(
+                        "⚠️ Ada nilai yang tidak bisa dikonversi ke format datetime."
+                    )
                     return
 
             # important column
@@ -152,7 +154,7 @@ def main():
             ]
             df = df[important_columns]
 
-            st.markdown("### Data tanaman yang di Upload")
+            st.markdown("### 📊 Data tanaman yang di Upload")
 
             st.dataframe(df)
 
@@ -163,9 +165,9 @@ def main():
 
             unique_days = df["datetime"].dt.date.nunique()
 
-            st.info(f"Total hari setelah di Tanam: {unique_days} hari")
+            st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
 
-            with st.spinner(text="Tunggu hasil analisis"):
+            with st.spinner(text="⏳ Sedang menganalisis..."):
                 time.sleep(5)
                 # st.success("Done")
 
@@ -196,7 +198,7 @@ def main():
 
             # Add select box for the height of the tanaman
             height_option = st.selectbox(
-                "Pilih berat tanaman (gram):", options=[100, 150]
+                "📏 Pilih berat tanaman (gram):", options=[100, 150]
             )
 
             # Set cap value based on the selected height option
@@ -211,19 +213,19 @@ def main():
             forecast = model.make_predictions(models, future)
 
             st.markdown(""" --- """)
-            st.markdown(f"### Hasil Forecasting untuk {periods} Ke-Depan")
+            st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
             col1, col2 = st.columns([6, 4])
 
             with col1:
-                st.write(f"Visualisasi Prediksi")
+                st.write(f"🔍 Visualisasi Prediksi")
                 fig = visualization.plot_forecast(forecast, periods)
 
                 # st.pyplot(fig)
                 st.plotly_chart(fig)
 
             with col2:
-                st.write(f"Tabel Prediksi")
+                st.write(f"📋 Tabel Prediksi")
                 st.dataframe(
                     forecast[
                         [
@@ -242,7 +244,7 @@ def main():
                         ]
                     ]
                 )
-            st.markdown(f"#### Kesimpulan")
+            st.markdown(f"#### 📝 Kesimpulan")
 
             conclusion = cek_optimization.summarize_forecast(df, forecast)
             st.info(f"\n{conclusion}")
@@ -256,7 +258,7 @@ def main():
             )
             st.plotly_chart(fig)
 
-            st.markdown("##### Kesimpulan Masing Masing Features")
+            st.markdown("##### 🔍 Kesimpulan Masing Masing Features")
 
             suggestions = cek_optimization.check_optimization(merged)
 
@@ -266,7 +268,7 @@ def main():
 
             else:
                 st.subheader(
-                    "Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
+                    "✅ Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
                 )
 
         else:
@@ -276,18 +278,14 @@ def main():
         # Use example CSV
         url_example = "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dummy_data_test.csv"
         df = pd.read_csv(url_example)
-        st.write("Menggunakan contoh file CSV dari URL:")
-
-        # st.markdown("### Data tanaman yang di Upload")
-
-        # st.dataframe(df)
+        st.write("Menggunakan contoh file CSV dari URL")
 
         # Convert 'datetime'column to datetime format if it's not already
         if not pd.api.types.is_datetime64_any_dtype(df["datetime"]):
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
             if df["datetime"].isnull().any():
-                st.error("Ada nilai yang tidak bisa dikonversi ke format datetime.")
+                st.error("⚠️ Ada nilai yang tidak bisa dikonversi ke format datetime.")
                 return
 
         # important column
@@ -305,7 +303,7 @@ def main():
         ]
         df = df[important_columns]
 
-        st.markdown("### Data tanaman yang di Upload")
+        st.markdown("### 📊 Data tanaman yang di Upload")
 
         st.dataframe(df)
 
@@ -316,11 +314,10 @@ def main():
 
         unique_days = df["datetime"].dt.date.nunique()
 
-        st.info(f"Total hari setelah di Tanam: {unique_days} hari")
+        st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
 
-        with st.spinner(text="Tunggu hasil analisis"):
+        with st.spinner(text="⏳ Sedang menganalisis..."):
             time.sleep(5)
-            # st.success("Done")
 
         future = models.make_future_dataframe(periods=unique_days, freq="D")
 
@@ -348,7 +345,9 @@ def main():
         periods = MAX_DAY - unique_days
 
         # Add select box for the height of the tanaman
-        height_option = st.selectbox("Pilih berat tanaman (gram):", options=[100, 150])
+        height_option = st.selectbox(
+            "📏 Pilih berat tanaman (gram):", options=[100, 150]
+        )
 
         # Set cap value based on the selected height option
         new_cap = 18 if height_option == 100 else 23
@@ -362,19 +361,19 @@ def main():
         forecast = model.make_predictions(models, future)
 
         st.markdown(""" --- """)
-        st.markdown(f"### Hasil Forecasting untuk {periods} Ke-Depan")
+        st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
         col1, col2 = st.columns([6, 4])
 
         with col1:
-            st.write(f"Visualisasi Prediksi")
+            st.write(f"🔍 Visualisasi Prediksi")
             fig = visualization.plot_forecast(forecast, periods)
 
             # st.pyplot(fig)
             st.plotly_chart(fig)
 
         with col2:
-            st.write(f"Tabel Prediksi")
+            st.write(f"📋 Tabel Prediksi")
             st.dataframe(
                 forecast[
                     [
@@ -386,7 +385,7 @@ def main():
                 ]
             )
 
-        st.markdown(f"#### Kesimpulan")
+        st.markdown(f"#### 📝 Kesimpulan")
         conclusion = cek_optimization.summarize_forecast(df, forecast)
         st.info(f"\n{conclusion}")
 
@@ -399,7 +398,7 @@ def main():
         )
         st.plotly_chart(fig)
 
-        st.markdown("##### Kesimpulan Masing Masing Features")
+        st.markdown("##### 🔍 Kesimpulan Masing Masing Features")
 
         suggestions = cek_optimization.check_optimization(merged)
 
@@ -409,7 +408,7 @@ def main():
 
         else:
             st.subheader(
-                "Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
+                "✅ Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
             )
 
 
