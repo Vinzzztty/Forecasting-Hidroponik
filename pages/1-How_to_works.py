@@ -36,7 +36,7 @@ def render_sidebar():
     """Render the sidebar with navigation."""
     with st.sidebar:
         st.markdown(
-            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/hijau.png?raw=true)"
+            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/new_hijau.png?raw=true)"
         )
 
 

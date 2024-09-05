@@ -44,7 +44,7 @@ def render_sidebar():
     """Render the sidebar with navigation."""
     with st.sidebar:
         st.markdown(
-            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/hijau.png?raw=true)"
+            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/new_hijau.png?raw=true)"
         )
 
 
@@ -196,19 +196,19 @@ def main():
 
             periods = MAX_DAY - unique_days
 
-            # Add select box for the height of the tanaman
-            height_option = st.selectbox(
-                "📏 Pilih berat tanaman (gram):", options=[100, 150]
-            )
+            # # Add select box for the height of the tanaman
+            # height_option = st.selectbox(
+            #     "📏 Pilih berat tanaman (gram):", options=[100, 150]
+            # )
 
-            # Set cap value based on the selected height option
-            new_cap = 18 if height_option == 100 else 23
+            # # Set cap value based on the selected height option
+            # new_cap = 18 if height_option == 100 else 23
 
             # st.write(f"Cap value set to: {new_cap}")
 
             future = model.create_future_dataframe(df_prophet, periods=periods)
 
-            future["cap"] = new_cap
+            future["cap"] = 18
 
             forecast = model.make_predictions(models, future)
 
@@ -344,19 +344,19 @@ def main():
 
         periods = MAX_DAY - unique_days
 
-        # Add select box for the height of the tanaman
-        height_option = st.selectbox(
-            "📏 Pilih berat tanaman (gram):", options=[100, 150]
-        )
+        # # Add select box for the height of the tanaman
+        # height_option = st.selectbox(
+        #     "📏 Pilih berat tanaman (gram):", options=[100, 150]
+        # )
 
-        # Set cap value based on the selected height option
-        new_cap = 18 if height_option == 100 else 23
+        # # Set cap value based on the selected height option
+        # new_cap = 18 if height_option == 100 else 23
 
         # st.write(f"Cap value set to: {new_cap}")
 
         future = model.create_future_dataframe(df_prophet, periods=periods)
 
-        future["cap"] = new_cap
+        future["cap"] = 18
 
         forecast = model.make_predictions(models, future)
 

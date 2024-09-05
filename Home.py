@@ -27,7 +27,7 @@ def inject_custom_css():
             background-color: #ffffff;
         }
         </style>
-        <img src='https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/banner_800.png?raw=true' class='header-image'/>
+        <img src='https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/new_banner_800.png?raw=true' class='header-image'/>
         """,
         unsafe_allow_html=True,
     )
@@ -37,7 +37,7 @@ def render_sidebar():
     """Render the sidebar with navigation."""
     with st.sidebar:
         st.markdown(
-            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/hijau.png?raw=true)"
+            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/new_hijau.png?raw=true)"
         )
 
 
@@ -67,27 +67,27 @@ def main():
 
     # Set up the two columns layout with different widths
     st.header("🔍 Kesimpulan")
-    col1, col2 = st.columns([3, 7])  # 70% and 30%
+    # col1, col2 = st.columns([3, 7])  # 70% and 30%
 
     # Content for the first column
-    with col1:
-        st.markdown(
-            "Model forecasting menggunakan algoritma Prophet menghasilkan metrik evaluasi sebagai berikut:"
-        )
+    # with col1:
+    st.markdown(
+        "Model forecasting menggunakan algoritma Prophet menghasilkan metrik evaluasi sebagai berikut:"
+    )
 
-        st.markdown("- **RMSE (Root Mean Square Error)**: 1.82")
-        st.markdown("- **MAE (Mean Absolute Error)**: 1.49")
+    st.markdown("- **RMSE (Root Mean Square Error)**: 1.82")
+    st.markdown("- **MAE (Mean Absolute Error)**: 1.49")
 
-        st.markdown(
-            "Hasil menunjukkan bahwa model memiliki akurasi yang baik dengan kesalahan prediksi yang relatif rendah."
-        )
+    st.markdown(
+        "Hasil menunjukkan bahwa model memiliki akurasi yang baik dengan kesalahan prediksi yang relatif rendah."
+    )
 
     # Content for the second column
-    with col2:
-        st.image(
-            "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/evaluasi_model.png?raw=true",
-            caption="Evaluasi Model",
-        )
+    # with col2:
+    st.image(
+        "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/evaluasi_model.png?raw=true",
+        caption="Evaluasi Model",
+    )
 
 
 if __name__ == "__main__":
