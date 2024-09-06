@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 
 def set_page_config():
@@ -40,13 +41,43 @@ def render_sidebar():
         )
 
 
+def download_template_csv():
+    """Generate and provide a template CSV file for download."""
+    # Create a DataFrame for the CSV template
+    template_data = {
+        "datetime": ["2024-07-22 14:30:00", "2024-07-23 14:30:00"],
+        "LeafCount": [20, 25],
+        "hole": [1, 1],
+        "temperature": [25.3, 26.1],
+        "humidity": [60.5, 61.0],
+        "light": [500, 510],
+        "pH": [6.5, 6.4],
+        "EC": [1.5, 1.6],
+        "TDS": [700, 720],
+        "WaterTemp": [23.0, 23.2],
+    }
+
+    template_df = pd.DataFrame(template_data)
+
+    # Convert DataFrame to CSV
+    csv_data = template_df.to_csv(index=False)
+
+    # Create a download button for the template CSV
+    st.download_button(
+        label="📄 Download Template CSV",
+        data=csv_data,
+        file_name="template_hydroponic.csv",
+        mime="text/csv",
+    )
+
+
 def main():
     set_page_config()
     inject_custom_css()
 
     render_sidebar()
 
-    st.title("Welcome to How to Works Page")
+    st.title("Welcome to How to Works Page 🛠️")
 
     # Tools used
     with st.expander("🔨 Tools Yang Digunakan"):
@@ -63,33 +94,36 @@ def main():
     st.markdown(
         """
         - **Pastikan file CSV Anda memiliki kolom yang diperlukan**:
-          - `datetime`
-          - `LeafCount`
-          - `hole`
-          - `temperature`
-          - `humidity`
-          - `light`
-          - `pH`
-          - `EC`
-          - `TDS`
-          - `WaterTemp`
+          - `datetime`: Tanggal dan waktu pengambilan data (format: `YYYY-MM-DD HH:MM:SS`)
+          - `LeafCount`: Jumlah daun tanaman
+          - `hole`: Jumlah lubang dalam sistem hidroponik
+          - `temperature`: Suhu lingkungan (dalam °C)
+          - `humidity`: Kelembaban udara (dalam %)
+          - `light`: Intensitas cahaya (dalam lumen)
+          - `pH`: Tingkat keasaman atau kebasaan
+          - `EC`: Konduktivitas listrik, mengukur konsentrasi nutrisi
+          - `TDS`: Total padatan terlarut dalam air
+          - `WaterTemp`: Suhu air dalam sistem hidroponik (dalam °C)
         """
     )
     st.markdown(
-        "- **Format kolom 'datetime' harus sesuai dengan format datetime standar**, yaitu `YYYY-MM-DD HH:MM:SS`. Contoh: `2024-07-22 14:30:00`."
+        "- **Format kolom 'datetime' harus sesuai dengan format datetime standar**, yaitu `YYYY-MM-DD HH:MM:SS`. Contoh: `2024-07-22 14:30:00` 🕒."
     )
     st.markdown(
-        "- **Pastikan dataset Anda mencakup data yang cukup untuk akurasi ramalan yang optimal**. Data yang dimasukkan harus mencakup **minimal `5` hari dan maksimal `40` hari**."
+        "- **Pastikan dataset Anda mencakup data yang cukup untuk akurasi ramalan yang optimal**. Data yang dimasukkan harus mencakup **minimal `5` hari dan maksimal `40` hari** 📅."
     )
     st.markdown(
-        "- Jika kolom 'datetime' tidak ada, sistem akan mencoba membuatnya dari kolom `day` dan `time`."
+        "- Jika kolom 'datetime' tidak ada, sistem akan mencoba membuatnya dari kolom `day` dan `time` 🛠️."
     )
 
     st.image(
         "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/pre-processing-data.png?raw=true",
-        caption="Contoh Format CSV",
+        caption="Contoh Format CSV 🗂️",
         use_column_width=True,
     )
+
+    st.header("📄 Download Template CSV")
+    download_template_csv()
 
     st.header("🛠️ Langkah-Langkah Penggunaan:")
     st.write("Ikuti langkah-langkah berikut untuk memulai:")
