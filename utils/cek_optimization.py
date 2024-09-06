@@ -30,14 +30,15 @@ def check_optimization(df):
         if not is_optimal:
             lower, upper = optimal_conditions.get(feature, (None, None))
             suggestions.append(
-                f"Rata-rata variabel {feature} belum optimal ({round(mean_value, 2)}). "
-                f"Harus di antara {lower} dan {upper}."
+                f"⚠️ Variabel **{feature}** dengan rata-rata **{round(mean_value, 2)}** "
+                f"perlu perhatian lebih 🔧. Disarankan untuk menjaga pada kisaran "
+                f"**{lower} - {upper}** agar hasil lebih optimal 🌱."
             )
 
     return suggestions
 
 
-def summarize_forecast(df, forecast):
+def summarize_forecast(df, forecast, periods):
     # Nilai LeafCount terakhir pada data input
     last_leaf_count = df["LeafCount"].iloc[-1]
 
@@ -50,9 +51,11 @@ def summarize_forecast(df, forecast):
     ) * 100
 
     conclusion = (
-        f"Sesuai dengan data input dan prediksi dalam simulasi pertumbuhan daun tanaman selada, "
-        f"pertumbuhan meningkat sebesar {growth_percentage:.2f}% dari hari setelah ditanam. "
-        f"Banyak daun pada hari ke-40 diprediksi sebanyak {max_forecasted_leaf_count:.0f}."
+        f"🌿 **Prediksi Pertumbuhan Daun Selada** 🌿\n\n"
+        f"📈 Berdasarkan simulasi pertumbuhan daun selada, diperkirakan terjadi peningkatan sebesar "
+        f"**{growth_percentage:.2f}%** dari jumlah daun awal 🌱.\n\n"
+        f"📅 Pada hari ke-**{periods}**, banyaknya daun diprediksi akan mencapai **{max_forecasted_leaf_count:.0f}** daun 🥬.\n\n"
+        f"✨ Tetap jaga kondisi lingkungan agar prediksi pertumbuhan ini dapat tercapai! 💧☀️"
     )
 
     return conclusion

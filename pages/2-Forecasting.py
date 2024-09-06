@@ -44,7 +44,7 @@ def render_sidebar():
     """Render the sidebar with navigation."""
     with st.sidebar:
         st.markdown(
-            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/hijau.png?raw=true)"
+            "![Logo](https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/new_hijau.png?raw=true)"
         )
 
 
@@ -55,14 +55,6 @@ def main():
     render_sidebar()
 
     st.title("Welcome to Forecasting Page")
-
-    # df_train_url = "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dataset_train_final.csv"
-    # df_train = pd.read_csv(df_train_url)
-
-    # st.write("### Unggah File CSV")
-    # uploaded_file = st.file_uploader(
-    #     "Unggah file CSV untuk dilakukan prediksi", type=["csv"]
-    # )
 
     # Display the options to the user
     option = st.radio(
@@ -194,28 +186,25 @@ def main():
                 on="ds",
             )
 
-            periods = MAX_DAY - unique_days
+            max_periods = MAX_DAY - unique_days
 
-            # Add select box for the height of the tanaman
-            height_option = st.selectbox(
-                "📏 Pilih berat tanaman (gram):", options=[100, 150]
+            periods = st.slider(
+                "⏳ Pilih hari untuk Forecasting pertumbuhan daun",
+                min_value=unique_days,
+                max_value=max_periods,
+                step=1,
             )
-
-            # Set cap value based on the selected height option
-            new_cap = 18 if height_option == 100 else 23
-
-            # st.write(f"Cap value set to: {new_cap}")
 
             future = model.create_future_dataframe(df_prophet, periods=periods)
 
-            future["cap"] = new_cap
+            future["cap"] = 18
 
             forecast = model.make_predictions(models, future)
 
             st.markdown(""" --- """)
             st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
-            col1, col2 = st.columns([6, 4])
+            col1, col2 = st.columns([8, 2])
 
             with col1:
                 st.write(f"🔍 Visualisasi Prediksi")
@@ -246,7 +235,7 @@ def main():
                 )
             st.markdown(f"#### 📝 Kesimpulan")
 
-            conclusion = cek_optimization.summarize_forecast(df, forecast)
+            conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
             st.info(f"\n{conclusion}")
 
             growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
@@ -258,7 +247,7 @@ def main():
             )
             st.plotly_chart(fig)
 
-            st.markdown("##### 🔍 Kesimpulan Masing Masing Features")
+            st.markdown("##### 🔍 Kesimpulan Masing Masing Variabel")
 
             suggestions = cek_optimization.check_optimization(merged)
 
@@ -268,8 +257,25 @@ def main():
 
             else:
                 st.subheader(
-                    "✅ Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
+                    "✅ Semua variabel berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
                 )
+
+            st.markdown("### 🔎 Detail Variabel")
+
+            selected_feature = st.selectbox(
+                "🎯 Pilih fitur untuk divisualisasikan:", df.columns[1:]
+            )
+
+            visualization.visualize_feature(df, selected_feature)
+
+            st.markdown("#### 🆚 Visualisasi Perbandingan Fitur")
+
+            # Pilih dua fitur yang akan dibandingkan
+            feature_a = st.selectbox("Pilih Fitur A", df.columns[1:])
+            feature_b = st.selectbox("Pilih Fitur B", df.columns[2:])
+
+            if feature_a and feature_b:
+                visualization.visualize_comparison(df, feature_a, feature_b)
 
         else:
             st.write("Silakan unggah file CSV terlebih dahulu.")
@@ -342,28 +348,25 @@ def main():
             on="ds",
         )
 
-        periods = MAX_DAY - unique_days
+        max_periods = MAX_DAY - unique_days
 
-        # Add select box for the height of the tanaman
-        height_option = st.selectbox(
-            "📏 Pilih berat tanaman (gram):", options=[100, 150]
+        periods = st.slider(
+            "⏳ Pilih hari untuk Forecasting pertumbuhan daun",
+            min_value=unique_days,
+            max_value=max_periods,
+            step=1,
         )
-
-        # Set cap value based on the selected height option
-        new_cap = 18 if height_option == 100 else 23
-
-        # st.write(f"Cap value set to: {new_cap}")
 
         future = model.create_future_dataframe(df_prophet, periods=periods)
 
-        future["cap"] = new_cap
+        future["cap"] = 18
 
         forecast = model.make_predictions(models, future)
 
         st.markdown(""" --- """)
         st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
-        col1, col2 = st.columns([6, 4])
+        col1, col2 = st.columns([8, 2])
 
         with col1:
             st.write(f"🔍 Visualisasi Prediksi")
@@ -386,7 +389,7 @@ def main():
             )
 
         st.markdown(f"#### 📝 Kesimpulan")
-        conclusion = cek_optimization.summarize_forecast(df, forecast)
+        conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
         st.info(f"\n{conclusion}")
 
         growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
@@ -394,11 +397,11 @@ def main():
         )
 
         fig = visualization.plot_growth_bar(
-            growth_percentage, last_leaf_count, max_forecasted_leaf_count
+            growth_percentage, last_leaf_count, max_forecasted_leaf_count, days=periods
         )
         st.plotly_chart(fig)
 
-        st.markdown("##### 🔍 Kesimpulan Masing Masing Features")
+        st.markdown("##### 🔍 Kesimpulan Masing Masing Variabel")
 
         suggestions = cek_optimization.check_optimization(merged)
 
@@ -408,8 +411,27 @@ def main():
 
         else:
             st.subheader(
-                "✅ Semua features berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
+                "✅ Semua variabel berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
             )
+
+        st.markdown("### 🔎 Detail Variabel")
+
+        # display visualization
+
+        selected_feature = st.selectbox(
+            "🎯 Pilih fitur untuk divisualisasikan:", df.columns[1:]
+        )
+
+        visualization.visualize_feature(df, selected_feature)
+
+        st.markdown("#### 🆚 Visualisasi Perbandingan Fitur")
+
+        # Pilih dua fitur yang akan dibandingkan
+        feature_a = st.selectbox("Pilih Fitur A", df.columns[1:])
+        feature_b = st.selectbox("Pilih Fitur B", df.columns[2:])
+
+        if feature_a and feature_b:
+            visualization.visualize_comparison(df, feature_a, feature_b)
 
 
 if __name__ == "__main__":

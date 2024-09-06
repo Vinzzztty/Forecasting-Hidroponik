@@ -5,64 +5,77 @@ import pandas as pd
 import plotly.graph_objs as go
 
 
-# def plot_forecast(model, forecast, periods):
-#     fig, ax = plt.subplots(
-#         figsize=(10, 5)
-#     )  # Increased figure size for better readability
+# def plot_forecast(forecast, periods):
 
-#     # Use Prophet's plot method
-#     model.plot(forecast, ax=ax)
+#     # Calculate the number of days since the first date in the forecast
+#     forecast["day"] = (forecast["ds"] - forecast["ds"].min()).dt.days + 1
 
-#     # Customize the plot
-#     ax.set_title(
-#         f"Perkiraan Jumlah Daun untuk {periods} Hari ke Depan",
-#         fontsize=18,
-#         fontweight="bold",
+#     # Create a figure
+#     fig = go.Figure()
+
+#     # Add the forecasted values
+#     fig.add_trace(
+#         go.Scatter(
+#             x=forecast["day"],
+#             y=forecast["yhat"],
+#             mode="lines+markers",
+#             name="Forecast",
+#             line=dict(color="red", dash="dash"),
+#         )
 #     )
-#     ax.set_xlabel("Tanggal", fontsize=12)
-#     ax.set_ylabel("Jumlah Daun", fontsize=12)
 
-#     # Improve the appearance of x-ticks
-#     plt.xticks(rotation=45, fontsize=12)
-#     plt.yticks(fontsize=12)
-#     ax.grid(
-#         True, linestyle="--", alpha=0.7
-#     )  # Make the grid lines dashed and semi-transparent
+#     # Add the uncertainty intervals
+#     fig.add_trace(
+#         go.Scatter(
+#             x=forecast["day"].tolist() + forecast["day"][::-1].tolist(),
+#             y=forecast["yhat_upper"].tolist() + forecast["yhat_lower"][::-1].tolist(),
+#             fill="toself",
+#             fillcolor="rgba(255, 0, 0, 0.2)",
+#             line=dict(color="rgba(255, 255, 255, 0)"),
+#             showlegend=False,
+#             name="Uncertainty Interval",
+#         )
+#     )
 
-#     # Customize the legend
-#     legend = ax.get_legend()
-#     if legend:
-#         legend.set_frame_on(False)  # Turn off legend frame for better appearance
-#         legend.set_fontsize(12)  # Adjust legend font size
-
-#     # Add annotations or markers if needed
-#     # Example: Highlight a specific forecast point
+#     # Highlight the maximum forecast point
 #     max_y = forecast["yhat"].max()
-#     max_date = forecast.loc[forecast["yhat"].idxmax(), "ds"]
-#     ax.annotate(
-#         "Puncak Perkiraan",
-#         xy=(max_date, max_y),
-#         xytext=(max_date, max_y * 1.1),
-#         arrowprops=dict(facecolor="red", shrink=0.05),
-#         fontsize=12,
-#         color="red",
-#         ha="center",
+#     max_date = forecast.loc[forecast["yhat"].idxmax(), "day"]
+#     fig.add_trace(
+#         go.Scatter(
+#             x=[max_date],
+#             y=[max_y],
+#             mode="markers+text",
+#             name="Puncak Perkiraan",
+#             text=["Puncak Perkiraan"],
+#             textposition="top center",
+#             marker=dict(color="red", size=10),
+#         )
 #     )
 
-#     # Adjust layout
-#     plt.tight_layout()
+#     # Customize the layout
+#     fig.update_layout(
+#         title=f"Perkiraan Jumlah Daun untuk {periods} Hari ke Depan",
+#         xaxis_title="Hari",
+#         yaxis_title="Jumlah Daun",
+#         legend=dict(font=dict(size=12)),
+#         # xaxis=dict(tickformat="%Y-%m-%d"),
+#         hovermode="x unified",
+#     )
 
 #     return fig
 
 
 def plot_forecast(forecast, periods):
+    # Calculate the number of days since the first date in the forecast
+    forecast["day"] = (forecast["ds"] - forecast["ds"].min()).dt.days + 1
+
     # Create a figure
     fig = go.Figure()
 
     # Add the forecasted values
     fig.add_trace(
         go.Scatter(
-            x=forecast["ds"],
+            x=forecast["day"],
             y=forecast["yhat"],
             mode="lines+markers",
             name="Forecast",
@@ -73,7 +86,7 @@ def plot_forecast(forecast, periods):
     # Add the uncertainty intervals
     fig.add_trace(
         go.Scatter(
-            x=forecast["ds"].tolist() + forecast["ds"][::-1].tolist(),
+            x=forecast["day"].tolist() + forecast["day"][::-1].tolist(),
             y=forecast["yhat_upper"].tolist() + forecast["yhat_lower"][::-1].tolist(),
             fill="toself",
             fillcolor="rgba(255, 0, 0, 0.2)",
@@ -85,7 +98,7 @@ def plot_forecast(forecast, periods):
 
     # Highlight the maximum forecast point
     max_y = forecast["yhat"].max()
-    max_date = forecast.loc[forecast["yhat"].idxmax(), "ds"]
+    max_date = forecast.loc[forecast["yhat"].idxmax(), "day"]
     fig.add_trace(
         go.Scatter(
             x=[max_date],
@@ -98,14 +111,78 @@ def plot_forecast(forecast, periods):
         )
     )
 
+    # Add animation frames
+    frames = [
+        go.Frame(
+            data=[
+                go.Scatter(
+                    x=forecast["day"][:i],
+                    y=forecast["yhat"][:i],
+                    mode="lines+markers",
+                    name="Forecast",
+                    line=dict(color="red", dash="dash"),
+                )
+            ],
+            name=str(i),
+        )
+        for i in range(1, len(forecast) + 1)
+    ]
+
+    fig.update(frames=frames)
+
     # Customize the layout
     fig.update_layout(
         title=f"Perkiraan Jumlah Daun untuk {periods} Hari ke Depan",
-        xaxis_title="Tanggal",
+        xaxis_title="Hari",
         yaxis_title="Jumlah Daun",
         legend=dict(font=dict(size=12)),
-        xaxis=dict(tickformat="%Y-%m-%d"),
+        sliders=[
+            {
+                "active": 0,
+                "steps": [
+                    {
+                        "label": str(i),
+                        "method": "animate",
+                        "args": [
+                            [str(i)],
+                            {
+                                "mode": "immediate",
+                                "frame": {"duration": 500, "redraw": True},
+                                "transition": {"duration": 0},
+                            },
+                        ],
+                    }
+                    for i in range(1, len(forecast) + 1)
+                ],
+                "transition": {"duration": 0},
+            }
+        ],
         hovermode="x unified",
+        updatemenus=[
+            {
+                "buttons": [
+                    {
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 500, "redraw": True},
+                                "fromcurrent": True,
+                            },
+                        ],
+                        "label": "Play",
+                        "method": "animate",
+                    }
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top",
+            }
+        ],
     )
 
     return fig
@@ -158,3 +235,153 @@ def plot_growth_bar(
     )
 
     return fig
+
+
+def visaulize_all_features(df):
+    # Convert datetime to 'day' since the start of data collection
+    df["day"] = (df["datetime"] - df["datetime"].min()).dt.days + 1
+
+    # List of features to visualize
+    features = [
+        "LeafCount",
+        "hole",
+        "temperature",
+        "humidity",
+        "light",
+        "pH",
+        "EC",
+        "TDS",
+        "WaterTemp",
+    ]
+
+    # Group by 'day' and calculate the mean of each feature
+    daily_means = df.groupby("day")[features].mean().reset_index()
+
+    # Loop through each feature and create a separate plot
+    for feature in features:
+        fig = go.Figure()
+
+        # Add the mean feature data as a trace
+        fig.add_trace(
+            go.Scatter(
+                x=daily_means["day"],
+                y=daily_means[feature],
+                mode="lines+markers",
+                name=feature,
+                line=dict(width=2),
+            )
+        )
+
+        # Customize layout
+        fig.update_layout(
+            title=f"Rata-rata '{feature}' Terhadap Hari",
+            xaxis_title="Hari",
+            yaxis_title=f"Rata-rata {feature}",
+            legend=dict(title="Fitur", orientation="h"),
+            hovermode="x unified",
+            xaxis=dict(
+                tickmode="linear", tick0=0, dtick=1
+            ),  # Ensure x-axis shows each day
+        )
+
+        # Display each figure in Streamlit
+        st.plotly_chart(fig, use_container_width=True)
+
+
+def visualize_feature(df, selected_feature):
+    # Convert datetime to 'day' since the start of data collection
+    df["day"] = (df["datetime"] - df["datetime"].min()).dt.days + 1
+
+    if selected_feature:
+        # Group by 'day' and calculate the mean of the selected feature
+        daily_means = df.groupby("day")[selected_feature].mean().reset_index()
+
+        # Calculate the total average of the selected feature
+        total_average = daily_means[selected_feature].mean()
+
+        # Create a figure for the selected feature
+        fig = go.Figure()
+
+        # Add the mean feature data as a trace
+        fig.add_trace(
+            go.Scatter(
+                x=daily_means["day"],
+                y=daily_means[selected_feature],
+                mode="lines+markers",
+                name=selected_feature,
+                line=dict(width=2),
+            )
+        )
+
+        # Customize layout
+        fig.update_layout(
+            title=f"📈 Rata-rata '{selected_feature}' Terhadap Hari",
+            xaxis_title="Hari",
+            yaxis_title=f"Rata-rata {selected_feature}",
+            legend=dict(title="Fitur", orientation="h"),
+            hovermode="x unified",
+            xaxis=dict(
+                tickmode="linear", tick0=0, dtick=1  # Ensure x-axis shows each day
+            ),
+        )
+
+        # Display the figure in Streamlit
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Display additional information
+        st.info(
+            f"✨ **Informasi Fitur `{selected_feature}`:**\n"
+            f"- **Rata-rata harian**: {total_average:.2f} 🌟\n"
+            f"\n**Keterangan:**\n"
+            f"Data ini memberikan wawasan berharga tentang bagaimana `{selected_feature}` berubah seiring waktu. "
+            f"Analisis ini membantu dalam memahami pola dan tren yang dapat digunakan untuk keputusan yang lebih baik. 🚀"
+        )
+    else:
+        st.write("🔍 Pilih fitur untuk divisualisasikan.")
+
+
+def visualize_comparison(df, feature_a, feature_b):
+
+    # Menghitung rata-rata dari setiap fitur
+    mean_feature_a = df[feature_a].mean()
+    mean_feature_b = df[feature_b].mean()
+
+    # Menghitung jumlah hari sejak tanggal pertama
+    df["day"] = (df["datetime"] - df["datetime"].min()).dt.days + 1  # Hari pertama = 1
+
+    # Buat figure untuk line chart
+    fig = go.Figure()
+
+    # Tambahkan trace untuk feature_a
+    fig.add_trace(
+        go.Scatter(
+            x=df["day"],
+            y=df[feature_a],
+            mode="lines",
+            name=f"Rata-rata {feature_a} ({mean_feature_a:.2f})",
+            line=dict(color="blue"),
+        )
+    )
+
+    # Tambahkan trace untuk feature_b
+    fig.add_trace(
+        go.Scatter(
+            x=df["day"],
+            y=df[feature_b],
+            mode="lines",
+            name=f"Rata-rata {feature_b} ({mean_feature_b:.2f})",
+            line=dict(color="green"),
+        )
+    )
+
+    # Sesuaikan layout
+    fig.update_layout(
+        title=f"Perbandingan '{feature_a}' vs '{feature_b}' (Rata-Rata)",
+        xaxis_title="Day",
+        yaxis_title="Value",
+        hovermode="x unified",
+        template="plotly_white",
+    )
+
+    # Tampilkan plot di Streamlit
+    st.plotly_chart(fig, use_container_width=True)
