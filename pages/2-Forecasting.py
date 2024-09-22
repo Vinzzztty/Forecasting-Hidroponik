@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 from utils import model, visualization, cek_optimization
-from prophet import Prophet
 import matplotlib.pyplot as plt
 import time
+import warnings
 
 # GLOBAL VARIABLE
 MAX_DAY = 40
@@ -160,7 +160,7 @@ def main():
             st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
 
             with st.spinner(text="⏳ Sedang menganalisis..."):
-                time.sleep(5)
+                time.sleep(2)
                 # st.success("Done")
 
             future = models.make_future_dataframe(periods=unique_days, freq="D")
@@ -204,14 +204,34 @@ def main():
             st.markdown(""" --- """)
             st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
-            col1, col2 = st.columns([8, 2])
+            st.write(f"🔍 Visualisasi Prediksi")
+            fig = visualization.plot_forecast(forecast, periods)
+
+            # st.pyplot(fig)
+            st.plotly_chart(fig)
+
+            col1, col2 = st.columns([6, 4])
 
             with col1:
-                st.write(f"🔍 Visualisasi Prediksi")
-                fig = visualization.plot_forecast(forecast, periods)
+                max_forecasted_leaf_count = forecast["yhat"].max()
 
-                # st.pyplot(fig)
-                st.plotly_chart(fig)
+                if max_forecasted_leaf_count <= 6:
+                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/early_leaf.png?raw=true"
+                elif max_forecasted_leaf_count <= 12:
+                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/mid_leaf.png?raw=true"
+                else:
+                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/high_leaf.png?raw=true"
+
+                # Center the image using HTML and display it
+                st.markdown(
+                    f"""
+                    <div style="text-align: center;">
+                        <img src="{image_path}" alt="Prediksi Jumlah Daun Selada" style="width: 50%;">
+                        <p>Prediksi Jumlah Daun Selada</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             with col2:
                 st.write(f"📋 Tabel Prediksi")
@@ -222,17 +242,53 @@ def main():
                             "yhat",
                             "yhat_lower",
                             "yhat_upper",
-                            # "hole",
-                            # "temperature",
-                            # "humidity",
-                            # "light",
-                            # "pH",
-                            # "EC",
-                            # "TDS",
-                            # "WaterTemp",
                         ]
                     ]
                 )
+
+            warnings.filterwarnings("ignore")
+
+            st.markdown(f"#### Kualitas Tanaman Selada")
+
+            # Display loading spinner while the model is being loaded
+            with st.spinner("Loading model..."):
+                # Load Model Kualitas Tanaman Selada
+                model_quality, accuracy = model.quality_model()
+
+            st.write("Enter the values for prediction")
+            # Create two columns
+            col5, col6 = st.columns(2)
+
+            with col5:
+                temperature_2 = st.number_input(
+                    "Temperature", format="%.2f", value=25.9, step=0.01
+                )
+                humidity_2 = st.number_input("Humidity", value=84, step=1)
+                light_2 = st.number_input("Light", value=10870, step=1)
+
+            with col6:
+                pH_2 = st.number_input("pH", format="%.2f", value=6.6, step=0.01)
+                EC_2 = st.number_input("EC", value=983, step=1)
+                TDS_2 = st.number_input("TDS", value=493, step=1)
+                WaterTemp_2 = st.number_input(
+                    "Water Temperature", format="%.2f", value=26.3, step=0.01
+                )
+
+            # Create input data for prediction
+            input_data = {
+                "temperature": temperature_2,
+                "humidity": humidity_2,
+                "light": light_2,
+                "pH": pH_2,
+                "EC": EC_2,
+                "TDS": TDS_2,
+                "WaterTemp": WaterTemp_2,
+            }
+
+            # Make prediction
+            if st.button("Predict"):
+                model.predict_pattern(model_quality, input_data)
+
             st.markdown(f"#### 📝 Kesimpulan")
 
             conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
@@ -323,7 +379,7 @@ def main():
         st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
 
         with st.spinner(text="⏳ Sedang menganalisis..."):
-            time.sleep(5)
+            time.sleep(2)
 
         future = models.make_future_dataframe(periods=unique_days, freq="D")
 
@@ -366,14 +422,34 @@ def main():
         st.markdown(""" --- """)
         st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
 
-        col1, col2 = st.columns([8, 2])
+        st.write(f"🔍 Visualisasi Prediksi")
+        fig = visualization.plot_forecast(forecast, periods)
+
+        # st.pyplot(fig)
+        st.plotly_chart(fig)
+
+        col1, col2 = st.columns([6, 4])
 
         with col1:
-            st.write(f"🔍 Visualisasi Prediksi")
-            fig = visualization.plot_forecast(forecast, periods)
+            max_forecasted_leaf_count = forecast["yhat"].max()
 
-            # st.pyplot(fig)
-            st.plotly_chart(fig)
+            if max_forecasted_leaf_count <= 6:
+                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/early_leaf.png?raw=true"
+            elif max_forecasted_leaf_count <= 12:
+                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/mid_leaf.png?raw=true"
+            else:
+                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/high_leaf.png?raw=true"
+
+            # Center the image using HTML and display it
+            st.markdown(
+                f"""
+                <div style="text-align: center;">
+                    <img src="{image_path}" alt="Prediksi Jumlah Daun Selada" style="width: 50%;">
+                    <p>Prediksi Jumlah Daun Selada</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         with col2:
             st.write(f"📋 Tabel Prediksi")
@@ -387,6 +463,49 @@ def main():
                     ]
                 ]
             )
+
+        warnings.filterwarnings("ignore")
+
+        st.markdown(f"#### Kualitas Tanaman Selada")
+
+        # Display loading spinner while the model is being loaded
+        with st.spinner("Loading model..."):
+            # Load Model Kualitas Tanaman Selada
+            model_quality, accuracy = model.quality_model()
+
+        st.write("Enter the values for prediction")
+        # Create two columns
+        col5, col6 = st.columns(2)
+
+        with col5:
+            temperature_2 = st.number_input(
+                "Temperature", format="%.2f", value=25.9, step=0.01
+            )
+            humidity_2 = st.number_input("Humidity", value=84, step=1)
+            light_2 = st.number_input("Light", value=10870, step=1)
+
+        with col6:
+            pH_2 = st.number_input("pH", format="%.2f", value=6.6, step=0.01)
+            EC_2 = st.number_input("EC", value=983, step=1)
+            TDS_2 = st.number_input("TDS", value=493, step=1)
+            WaterTemp_2 = st.number_input(
+                "Water Temperature", format="%.2f", value=26.3, step=0.01
+            )
+
+        # Create input data for prediction
+        input_data = {
+            "temperature": temperature_2,
+            "humidity": humidity_2,
+            "light": light_2,
+            "pH": pH_2,
+            "EC": EC_2,
+            "TDS": TDS_2,
+            "WaterTemp": WaterTemp_2,
+        }
+
+        # Make prediction
+        if st.button("Predict"):
+            model.predict_pattern(model_quality, input_data)
 
         st.markdown(f"#### 📝 Kesimpulan")
         conclusion = cek_optimization.summarize_forecast(df, forecast, periods)

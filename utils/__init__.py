@@ -1,4 +1,11 @@
-from .model import load_model, prepare_data, create_future_dataframe, make_predictions
+from .model import (
+    load_model,
+    prepare_data,
+    create_future_dataframe,
+    make_predictions,
+    quality_model,
+    predict_pattern,
+)
 from .visualization import (
     plot_forecast,
     plot_growth_bar,
