@@ -5,66 +5,6 @@ import pandas as pd
 import plotly.graph_objs as go
 
 
-# def plot_forecast(forecast, periods):
-
-#     # Calculate the number of days since the first date in the forecast
-#     forecast["day"] = (forecast["ds"] - forecast["ds"].min()).dt.days + 1
-
-#     # Create a figure
-#     fig = go.Figure()
-
-#     # Add the forecasted values
-#     fig.add_trace(
-#         go.Scatter(
-#             x=forecast["day"],
-#             y=forecast["yhat"],
-#             mode="lines+markers",
-#             name="Forecast",
-#             line=dict(color="red", dash="dash"),
-#         )
-#     )
-
-#     # Add the uncertainty intervals
-#     fig.add_trace(
-#         go.Scatter(
-#             x=forecast["day"].tolist() + forecast["day"][::-1].tolist(),
-#             y=forecast["yhat_upper"].tolist() + forecast["yhat_lower"][::-1].tolist(),
-#             fill="toself",
-#             fillcolor="rgba(255, 0, 0, 0.2)",
-#             line=dict(color="rgba(255, 255, 255, 0)"),
-#             showlegend=False,
-#             name="Uncertainty Interval",
-#         )
-#     )
-
-#     # Highlight the maximum forecast point
-#     max_y = forecast["yhat"].max()
-#     max_date = forecast.loc[forecast["yhat"].idxmax(), "day"]
-#     fig.add_trace(
-#         go.Scatter(
-#             x=[max_date],
-#             y=[max_y],
-#             mode="markers+text",
-#             name="Puncak Perkiraan",
-#             text=["Puncak Perkiraan"],
-#             textposition="top center",
-#             marker=dict(color="red", size=10),
-#         )
-#     )
-
-#     # Customize the layout
-#     fig.update_layout(
-#         title=f"Perkiraan Jumlah Daun untuk {periods} Hari ke Depan",
-#         xaxis_title="Hari",
-#         yaxis_title="Jumlah Daun",
-#         legend=dict(font=dict(size=12)),
-#         # xaxis=dict(tickformat="%Y-%m-%d"),
-#         hovermode="x unified",
-#     )
-
-#     return fig
-
-
 def plot_forecast(forecast, periods):
     # Calculate the number of days since the first date in the forecast
     forecast["day"] = (forecast["ds"] - forecast["ds"].min()).dt.days + 1
@@ -157,7 +97,6 @@ def plot_forecast(forecast, periods):
                 "transition": {"duration": 0},
             }
         ],
-        hovermode="x unified",
         updatemenus=[
             {
                 "buttons": [
@@ -167,6 +106,7 @@ def plot_forecast(forecast, periods):
                             {
                                 "frame": {"duration": 500, "redraw": True},
                                 "fromcurrent": True,
+                                "mode": "immediate",
                             },
                         ],
                         "label": "Play",
@@ -183,6 +123,36 @@ def plot_forecast(forecast, periods):
                 "yanchor": "top",
             }
         ],
+    )
+
+    # Automatically start the animation by simulating a button click on render
+    fig.update_layout(
+        updatemenus=[
+            {
+                "buttons": [
+                    {
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 500, "redraw": True},
+                                "fromcurrent": True,
+                                "mode": "immediate",
+                            },
+                        ],
+                        "label": "Play",
+                        "method": "animate",
+                    }
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top",
+            }
+        ]
     )
 
     return fig
