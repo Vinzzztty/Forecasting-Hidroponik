@@ -2,40 +2,44 @@ import pandas as pd
 
 
 def check_optimization(df):
-    # Menghitung rata rata masing masing features
+    # Calculate the mean of each feature
     means = df.mean().round(2)
 
-    # Membuat aturan untuk menentukan rata rata sudah optimal
+    # Define optimal ranges for each feature
     optimal_conditions = {
-        "temperature": (25, 28),
-        "humidity": (50, 70),
-        "light": (1000, 4000),
-        "pH": (6.0, 7.0),
-        "EC": (1200, 1800),
-        "TDS": (560, 840),
-        "WaterTemp": (25, 28),
+        "temperature_x": (25, 28),
+        "humidity_x": (50, 70),
+        "light_x": (1000, 4000),
+        "pH_x": (6.0, 7.0),
+        "EC_x": (1200, 1800),
+        "TDS_x": (560, 840),
+        "WaterTemp_x": (25, 28),
     }
 
-    # cek optimal
+    # Determine if each feature is within optimal range
     def check_optimal(feature, value):
         if feature in optimal_conditions:
             lower, upper = optimal_conditions[feature]
             return lower <= value <= upper
-        return True
+        return True  # Always optimal if no specific range
 
-    # Membuat kesimpulan
-    suggestions = []
+    # Generate conclusions for each feature
+    conclusions = []
     for feature, mean_value in means.items():
         is_optimal = check_optimal(feature, mean_value)
-        if not is_optimal:
-            lower, upper = optimal_conditions.get(feature, (None, None))
-            suggestions.append(
-                f"⚠️ Variabel **{feature}** dengan rata-rata **{round(mean_value, 2)}** "
-                f"perlu perhatian lebih 🔧. Disarankan untuk menjaga pada kisaran "
-                f"**{lower} - {upper}** agar hasil lebih optimal 🌱."
+
+        if is_optimal:
+            # Positive statement if the feature is within optimal range
+            conclusions.append(
+                f"✔️ Rata-rata {feature} dalam kondisi ideal pada nilai {mean_value}. Kondisi ini mendukung pertumbuhan optimal 🌱."
+            )
+        else:
+            # Normative statement without suggesting specific ranges
+            conclusions.append(
+                f"⚠️ Rata-rata {feature} tercatat pada {mean_value}. Memerlukan perhatian untuk mencapai kondisi yang lebih mendukung."
             )
 
-    return suggestions
+    return conclusions
 
 
 def summarize_forecast(df, forecast, periods):
