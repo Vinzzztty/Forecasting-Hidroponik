@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def set_page_config():
@@ -87,6 +89,41 @@ def main():
     st.image(
         "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/evaluasi_model.png?raw=true",
         caption="Evaluasi Model",
+    )
+
+    # Set up the two columns layout with different widths
+    st.header("🔍 Perbandingan Model ARIMA dan Prophet")
+
+    # Data evaluasi model
+    data = {
+        "Model": ["ARIMA", "Prophet"],
+        "RMSE": [8.970086115676192, 1.8154298562350784],
+        "MAE": [8.170746410714356, 1.4857125402032283],
+    }
+
+    # Membuat DataFrame
+    df = pd.DataFrame(data)
+
+    col1, col2 = st.columns([3, 7])
+
+    with col1:
+        st.write("### Tabel Evaluasi Model")
+        st.dataframe(df)
+
+    with col2:
+        st.image(
+            "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/perbandingan_model.png?raw=true",
+            caption="Evaluasi Model",
+        )
+
+    # Kesimpulan
+    st.write("### Kesimpulan")
+    st.markdown(
+        """
+        Hasil evaluasi menunjukkan bahwa model Prophet mengungguli model ARIMA dalam metrik RMSE dan MAE.
+        Prophet memiliki RMSE (1.815) dan MAE (1.486) yang lebih rendah dibandingkan dengan ARIMA, yang memiliki RMSE (8.970) dan MAE (8.171).
+        Hal ini menunjukkan bahwa model Prophet memberikan prediksi yang lebih akurat.
+        """
     )
 
 

@@ -48,206 +48,251 @@ def render_sidebar():
         )
 
 
-def main():
-    set_page_config()
-    inject_custom_css()
-
-    render_sidebar()
-
-    st.title("Welcome to Forecasting Page")
-
-    # Display the options to the user
-    option = st.radio(
-        "Pilih metode input data:", ("Unggah file CSV", "Gunakan contoh file CSV")
-    )
-
+def handle_file_upload(option):
+    """Handle CSV file upload or use example CSV."""
     if option == "Unggah file CSV":
-        # File uploader
         uploaded_file = st.file_uploader(
             "Unggah file CSV untuk dilakukan prediksi", type=["csv"]
         )
-
         if uploaded_file is not None:
+            return pd.read_csv(uploaded_file)
+    elif option == "Gunakan contoh file CSV":
+        url_example = "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dummy_data_test.csv"
+        st.write("Menggunakan contoh file CSV dari URL")
+        return pd.read_csv(url_example)
+    return None
 
-            df = pd.read_csv(uploaded_file)
 
-            # check if 'datetime' column is not present
-            if "datetime" not in df.columns:
-                st.info(
-                    "Kolom 'datetime' tidak ditemukan, akan membuat kolom 'datetime' dari kolom 'day' dan 'time' secara otomatis!."
-                )
+def preprocess_data(df):
+    """Preprocess the input data to ensure required columns are available and properly formatted."""
+    # check if 'datetime' column is not present
+    if "datetime" not in df.columns:
+        st.info(
+            "Kolom 'datetime' tidak ditemukan, akan membuat kolom 'datetime' dari kolom 'day' dan 'time' secara otomatis!."
+        )
 
-                # Inisialisasi start_date
-                # now = datetime.now().strftime("%Y-%m-%d")
-                start_date = pd.to_datetime("2024-07-01")
+        # Inisialisasi start_date
+        start_date = pd.to_datetime("2024-07-01")
 
-                # Ensure 'day' column exists and is of integer type
-                if "day" in df.columns:
-                    df["day"] = df["day"].astype(int)
-                else:
-                    st.error("Kolom 'day' tidak ditemukan pada file CSV.")
+        # Ensure 'day' column exists and is of integer type
+        if "day" in df.columns:
+            df["day"] = df["day"].astype(int)
+        else:
+            st.error("Kolom 'day' tidak ditemukan pada file CSV.")
 
-                # Ensure 'time' column exists and format it properly
-                if "time" in df.columns:
-                    df["time"] = df["time"].apply(lambda x: "{:.2f}".format(x))
+        # Ensure 'time' column exists and format it properly
+        if "time" in df.columns:
+            df["time"] = df["time"].apply(lambda x: "{:.2f}".format(x))
+            df["time"] = pd.to_datetime(df["time"], format="%H.%M").dt.time
 
-                    df["time"] = pd.to_datetime(df["time"], format="%H.%M").dt.time
+            # Replace dots with colons for time formatting
+            df["time"] = df["time"].astype(str)
 
-                    # Replace dots with colons for time formatting
-                    df["time"] = df["time"].astype(
-                        str
-                    )  # .str.replace(".", ":", regex=False)
+            df["datetime"] = df.apply(
+                lambda row: start_date
+                + pd.Timedelta(days=row["day"] - 1)
+                + pd.to_timedelta(row["time"]),
+                axis=1,
+            )
 
-                    df["datetime"] = df.apply(
-                        lambda row: start_date
-                        + pd.Timedelta(days=row["day"] - 1)
-                        + pd.to_timedelta(row["time"]),
-                        axis=1,
-                    )
+            df = df.drop_duplicates(subset=["day", "time", "LeafCount"])
 
-                    df = df.drop_duplicates(subset=["day", "time", "LeafCount"])
+            df.set_index("datetime", inplace=True)
+            df = df.sort_index()
 
-                    df.set_index("datetime", inplace=True)
-                    df = df.sort_index()
+        else:
+            st.error("Kolom 'time' tidak ditemukan pada file CSV.")
+            return None
 
-                else:
-                    st.error("Kolom 'time' tidak ditemukan pada file CSV.")
-                    return
+        df["datetime"] = df.apply(
+            lambda row: start_date
+            + pd.Timedelta(days=row["day"] - 1)
+            + pd.to_timedelta(row["time"]),
+            axis=1,
+        )
 
-                df["datetime"] = df.apply(
-                    lambda row: start_date
-                    + pd.Timedelta(days=row["day"] - 1)
-                    + pd.to_timedelta(row["time"]),
-                    axis=1,
-                )
+    # Convert 'datetime'column to datetime format if it's not already
+    if not pd.api.types.is_datetime64_any_dtype(df["datetime"]):
+        df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
-            # Convert 'datetime'column to datetime format if it's not already
-            if not pd.api.types.is_datetime64_any_dtype(df["datetime"]):
-                df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+        if df["datetime"].isnull().any():
+            st.error("⚠️ Ada nilai yang tidak bisa dikonversi ke format datetime.")
+            return None
 
-                if df["datetime"].isnull().any():
-                    st.error(
-                        "⚠️ Ada nilai yang tidak bisa dikonversi ke format datetime."
-                    )
-                    return
+    important_columns = [
+        "datetime",
+        "LeafCount",
+        "hole",
+        "temperature",
+        "humidity",
+        "light",
+        "pH",
+        "EC",
+        "TDS",
+        "WaterTemp",
+    ]
+    return df[important_columns]
 
-            # important column
-            important_columns = [
-                "datetime",
-                "LeafCount",
-                "hole",
-                "temperature",
-                "humidity",
-                "light",
-                "pH",
-                "EC",
-                "TDS",
-                "WaterTemp",
-            ]
-            df = df[important_columns]
 
+def forecast_growth(df):
+    """Forecast the growth of leaves based on the model and user input."""
+    df_prophet = model.prepare_data(df)
+    models = model.load_model("./model/prophet_model.pkl")
+
+    unique_days = df["datetime"].dt.date.nunique()
+    st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
+
+    with st.spinner(text="⏳ Sedang menganalisis..."):
+        time.sleep(2)
+
+    future = models.make_future_dataframe(periods=unique_days, freq="D")
+    for feature in [
+        "hole",
+        "temperature",
+        "humidity",
+        "light",
+        "pH",
+        "EC",
+        "TDS",
+        "WaterTemp",
+    ]:
+        future[feature] = df_prophet[feature].iloc[-1]
+    future["cap"] = 18
+
+    forecast = models.predict(future)
+    max_periods = MAX_DAY - unique_days
+    periods = st.slider(
+        "⏳ Pilih hari untuk Forecasting pertumbuhan daun",
+        min_value=unique_days,
+        max_value=max_periods,
+        step=1,
+    )
+    future = model.create_future_dataframe(df_prophet, periods=periods)
+    future["cap"] = 18
+    forecast = model.make_predictions(models, future)
+
+    st.markdown(""" --- """)
+    st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
+    fig = visualization.plot_forecast(forecast, periods)
+    st.plotly_chart(fig)
+
+    col1, col2 = st.columns([6, 4])
+    with col1:
+        periods = forecast["day"].max()
+        image_path = select_image_path(periods)
+        st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="{image_path}" alt="Prediksi Jumlah Daun Selada" style="width: 50%;">
+                <p>Prediksi Jumlah Daun Selada</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.write(f"📋 Tabel Prediksi")
+        st.dataframe(forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]])
+
+    return df_prophet, forecast
+
+
+def select_image_path(periods):
+    """Select the appropriate image based on the predicted leaf count."""
+    if periods <= 10:
+        return "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/early_leaf.png?raw=true"
+    elif periods <= 14:
+        return "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/over.png?raw=true"
+    elif periods <= 18:
+        return "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/mid_leaf.png?raw=true"
+    elif periods <= 24:
+        return "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/normal.png?raw=true"
+    else:
+        return "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/high_leaf.png?raw=true"
+
+
+def display_summary(df, df_prophet, forecast, periods):
+    """Display summary of the forecasting results."""
+    st.markdown(f"#### 📝 Kesimpulan")
+    conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
+    st.info(f"\n{conclusion}")
+
+    growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
+        visualization.calculate_growth_percentage(df, forecast)
+    )
+    fig = visualization.plot_growth_bar(
+        growth_percentage, last_leaf_count, max_forecasted_leaf_count
+    )
+    st.plotly_chart(fig)
+
+    st.markdown("##### 🔍 Kesimpulan Masing Masing Variabel")
+    suggestions = cek_optimization.check_optimization(
+        pd.merge(df_prophet, forecast, on="ds")
+    )
+
+    if suggestions:
+        # Extract the variable names from suggestions
+        variable_names = [suggestion.split()[2] for suggestion in suggestions]
+
+        # Filter to include only '_x' columns and remove '_x' for display
+        important_columns = [name for name in variable_names if name.endswith("_x")]
+        display_names = [name.replace("_x", "") for name in important_columns]
+
+        # Display selectbox for variable selection with cleaned names
+        selected_display_name = st.selectbox(
+            "Pilih variabel untuk melihat kesimpulan:", display_names
+        )
+
+        # Add '_x' back to match the original variable names in `suggestions`
+        selected_variable = selected_display_name + "_x"
+
+        # Find and display the conclusion for the selected variable
+        selected_conclusion = next(
+            (
+                suggestion
+                for suggestion in suggestions
+                if selected_variable in suggestion
+            ),
+            "Kesimpulan tidak ditemukan.",
+        )
+        st.write(selected_conclusion)
+    else:
+        st.subheader(
+            "✅ Semua variabel berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
+        )
+
+
+def main():
+    set_page_config()
+    inject_custom_css()
+    render_sidebar()
+
+    st.title("Welcome to Forecasting Page")
+    option = st.radio(
+        "Pilih metode input data:", ("Unggah file CSV", "Gunakan contoh file CSV")
+    )
+    df = handle_file_upload(option)
+
+    if df is not None:
+        df = preprocess_data(df)
+        if df is not None:
             st.markdown("### 📊 Data tanaman yang di Upload")
-
             st.dataframe(df)
+            df_prophet, forecast = forecast_growth(df)
+            display_summary(df, df_prophet, forecast, periods=MAX_DAY)
 
-            df_prophet = model.prepare_data(df)
-
-            # Load Model
-            models = model.load_model("./model/prophet_model.pkl")
-
-            unique_days = df["datetime"].dt.date.nunique()
-
-            st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
-
-            with st.spinner(text="⏳ Sedang menganalisis..."):
-                time.sleep(2)
-                # st.success("Done")
-
-            future = models.make_future_dataframe(periods=unique_days, freq="D")
-
-            future["cap"] = 18
-
-            future["hole"] = df_prophet["hole"].iloc[-1]
-            future["temperature"] = df_prophet["temperature"].iloc[-1]
-            future["humidity"] = df_prophet["humidity"].iloc[-1]
-            future["light"] = df_prophet["light"].iloc[-1]
-            future["pH"] = df_prophet["pH"].iloc[-1]
-            future["EC"] = df_prophet["EC"].iloc[-1]
-            future["TDS"] = df_prophet["TDS"].iloc[-1]
-            future["WaterTemp"] = df_prophet["WaterTemp"].iloc[-1]
-
-            forecast = models.predict(future)
-
-            forecast_test = forecast[forecast["ds"].isin(df_prophet["ds"])]
-
-            merged = pd.merge(
-                df_prophet,
-                forecast_test[["ds", "yhat", "yhat_lower", "yhat_upper"]],
-                on="ds",
+            st.markdown("### 🔎 Detail Variabel")
+            selected_feature = st.selectbox(
+                "🎯 Pilih fitur untuk divisualisasikan:", df.columns[1:]
             )
+            visualization.visualize_feature(df, selected_feature)
 
-            max_periods = MAX_DAY - unique_days
+            st.markdown("#### 🆚 Visualisasi Perbandingan Fitur")
+            feature_a = st.selectbox("Pilih Fitur A", df.columns[1:])
+            feature_b = st.selectbox("Pilih Fitur B", df.columns[2:])
+            if feature_a and feature_b:
+                visualization.visualize_comparison(df, feature_a, feature_b)
 
-            periods = st.slider(
-                "⏳ Pilih hari untuk Forecasting pertumbuhan daun",
-                min_value=unique_days,
-                max_value=max_periods,
-                step=1,
-            )
-
-            future = model.create_future_dataframe(df_prophet, periods=periods)
-
-            future["cap"] = 18
-
-            forecast = model.make_predictions(models, future)
-
-            st.markdown(""" --- """)
-            st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
-
-            st.write(f"🔍 Visualisasi Prediksi")
-            fig = visualization.plot_forecast(forecast, periods)
-
-            # st.pyplot(fig)
-            st.plotly_chart(fig)
-
-            col1, col2 = st.columns([6, 4])
-
-            with col1:
-                max_forecasted_leaf_count = forecast["yhat"].max()
-
-                if max_forecasted_leaf_count <= 6:
-                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/early_leaf.png?raw=true"
-                elif max_forecasted_leaf_count <= 12:
-                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/mid_leaf.png?raw=true"
-                else:
-                    image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/high_leaf.png?raw=true"
-
-                # Center the image using HTML and display it
-                st.markdown(
-                    f"""
-                    <div style="text-align: center;">
-                        <img src="{image_path}" alt="Prediksi Jumlah Daun Selada" style="width: 50%;">
-                        <p>Prediksi Jumlah Daun Selada</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            with col2:
-                st.write(f"📋 Tabel Prediksi")
-                st.dataframe(
-                    forecast[
-                        [
-                            "ds",
-                            "yhat",
-                            "yhat_lower",
-                            "yhat_upper",
-                        ]
-                    ]
-                )
-
-            warnings.filterwarnings("ignore")
-
+            # Add Quality Prediction Section
             st.markdown(f"#### Kualitas Tanaman Selada")
 
             # Display loading spinner while the model is being loaded
@@ -256,7 +301,7 @@ def main():
                 model_quality, accuracy = model.quality_model()
 
             st.write("Enter the values for prediction")
-            # Create two columns
+            # Create two columns for inputs
             col5, col6 = st.columns(2)
 
             with col5:
@@ -287,270 +332,10 @@ def main():
 
             # Make prediction
             if st.button("Predict"):
-                model.predict_pattern(model_quality, input_data)
-
-            st.markdown(f"#### 📝 Kesimpulan")
-
-            conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
-            st.info(f"\n{conclusion}")
-
-            growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
-                visualization.calculate_growth_percentage(df, forecast)
-            )
-
-            fig = visualization.plot_growth_bar(
-                growth_percentage, last_leaf_count, max_forecasted_leaf_count
-            )
-            st.plotly_chart(fig)
-
-            st.markdown("##### 🔍 Kesimpulan Masing Masing Variabel")
-
-            suggestions = cek_optimization.check_optimization(merged)
-
-            if suggestions:
-                for suggestion in suggestions:
-                    st.write(suggestion)
-
-            else:
-                st.subheader(
-                    "✅ Semua variabel berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
-                )
-
-            st.markdown("### 🔎 Detail Variabel")
-
-            selected_feature = st.selectbox(
-                "🎯 Pilih fitur untuk divisualisasikan:", df.columns[1:]
-            )
-
-            visualization.visualize_feature(df, selected_feature)
-
-            st.markdown("#### 🆚 Visualisasi Perbandingan Fitur")
-
-            # Pilih dua fitur yang akan dibandingkan
-            feature_a = st.selectbox("Pilih Fitur A", df.columns[1:])
-            feature_b = st.selectbox("Pilih Fitur B", df.columns[2:])
-
-            if feature_a and feature_b:
-                visualization.visualize_comparison(df, feature_a, feature_b)
-
+                prediction_result = model.predict_pattern(model_quality, input_data)
+                st.write(f"Predicted Quality: {prediction_result}")
         else:
             st.write("Silakan unggah file CSV terlebih dahulu.")
-
-    elif option == "Gunakan contoh file CSV":
-        # Use example CSV
-        url_example = "https://raw.githubusercontent.com/Vinzzztty/Forecasting-Hidroponik/main/dataset/dummy_data_test.csv"
-        df = pd.read_csv(url_example)
-        st.write("Menggunakan contoh file CSV dari URL")
-
-        # Convert 'datetime'column to datetime format if it's not already
-        if not pd.api.types.is_datetime64_any_dtype(df["datetime"]):
-            df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-
-            if df["datetime"].isnull().any():
-                st.error("⚠️ Ada nilai yang tidak bisa dikonversi ke format datetime.")
-                return
-
-        # important column
-        important_columns = [
-            "datetime",
-            "LeafCount",
-            "hole",
-            "temperature",
-            "humidity",
-            "light",
-            "pH",
-            "EC",
-            "TDS",
-            "WaterTemp",
-        ]
-        df = df[important_columns]
-
-        st.markdown("### 📊 Data tanaman yang di Upload")
-
-        st.dataframe(df)
-
-        df_prophet = model.prepare_data(df)
-
-        # Load Model
-        models = model.load_model("./model/prophet_model.pkl")
-
-        unique_days = df["datetime"].dt.date.nunique()
-
-        st.info(f"🗓️ Total hari setelah di Tanam: {unique_days} hari")
-
-        with st.spinner(text="⏳ Sedang menganalisis..."):
-            time.sleep(2)
-
-        future = models.make_future_dataframe(periods=unique_days, freq="D")
-
-        future["cap"] = 18
-
-        future["hole"] = df_prophet["hole"].iloc[-1]
-        future["temperature"] = df_prophet["temperature"].iloc[-1]
-        future["humidity"] = df_prophet["humidity"].iloc[-1]
-        future["light"] = df_prophet["light"].iloc[-1]
-        future["pH"] = df_prophet["pH"].iloc[-1]
-        future["EC"] = df_prophet["EC"].iloc[-1]
-        future["TDS"] = df_prophet["TDS"].iloc[-1]
-        future["WaterTemp"] = df_prophet["WaterTemp"].iloc[-1]
-
-        forecast = models.predict(future)
-
-        forecast_test = forecast[forecast["ds"].isin(df_prophet["ds"])]
-
-        merged = pd.merge(
-            df_prophet,
-            forecast_test[["ds", "yhat", "yhat_lower", "yhat_upper"]],
-            on="ds",
-        )
-
-        max_periods = MAX_DAY - unique_days
-
-        periods = st.slider(
-            "⏳ Pilih hari untuk Forecasting pertumbuhan daun",
-            min_value=unique_days,
-            max_value=max_periods,
-            step=1,
-        )
-
-        future = model.create_future_dataframe(df_prophet, periods=periods)
-
-        future["cap"] = 18
-
-        forecast = model.make_predictions(models, future)
-
-        st.markdown(""" --- """)
-        st.markdown(f"### 📈 Hasil Forecasting untuk {periods} Hari Ke Depan")
-
-        st.write(f"🔍 Visualisasi Prediksi")
-        fig = visualization.plot_forecast(forecast, periods)
-
-        # st.pyplot(fig)
-        st.plotly_chart(fig)
-
-        col1, col2 = st.columns([6, 4])
-
-        with col1:
-            max_forecasted_leaf_count = forecast["yhat"].max()
-
-            if max_forecasted_leaf_count <= 6:
-                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/early_leaf.png?raw=true"
-            elif max_forecasted_leaf_count <= 12:
-                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/mid_leaf.png?raw=true"
-            else:
-                image_path = "https://github.com/Vinzzztty/Forecasting-Hidroponik/blob/V2/assets/high_leaf.png?raw=true"
-
-            # Center the image using HTML and display it
-            st.markdown(
-                f"""
-                <div style="text-align: center;">
-                    <img src="{image_path}" alt="Prediksi Jumlah Daun Selada" style="width: 50%;">
-                    <p>Prediksi Jumlah Daun Selada</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with col2:
-            st.write(f"📋 Tabel Prediksi")
-            st.dataframe(
-                forecast[
-                    [
-                        "ds",
-                        "yhat",
-                        "yhat_lower",
-                        "yhat_upper",
-                    ]
-                ]
-            )
-
-        warnings.filterwarnings("ignore")
-
-        st.markdown(f"#### Kualitas Tanaman Selada")
-
-        # Display loading spinner while the model is being loaded
-        with st.spinner("Loading model..."):
-            # Load Model Kualitas Tanaman Selada
-            model_quality, accuracy = model.quality_model()
-
-        st.write("Enter the values for prediction")
-        # Create two columns
-        col5, col6 = st.columns(2)
-
-        with col5:
-            temperature_2 = st.number_input(
-                "Temperature", format="%.2f", value=25.9, step=0.01
-            )
-            humidity_2 = st.number_input("Humidity", value=84, step=1)
-            light_2 = st.number_input("Light", value=10870, step=1)
-
-        with col6:
-            pH_2 = st.number_input("pH", format="%.2f", value=6.6, step=0.01)
-            EC_2 = st.number_input("EC", value=983, step=1)
-            TDS_2 = st.number_input("TDS", value=493, step=1)
-            WaterTemp_2 = st.number_input(
-                "Water Temperature", format="%.2f", value=26.3, step=0.01
-            )
-
-        # Create input data for prediction
-        input_data = {
-            "temperature": temperature_2,
-            "humidity": humidity_2,
-            "light": light_2,
-            "pH": pH_2,
-            "EC": EC_2,
-            "TDS": TDS_2,
-            "WaterTemp": WaterTemp_2,
-        }
-
-        # Make prediction
-        if st.button("Predict"):
-            model.predict_pattern(model_quality, input_data)
-
-        st.markdown(f"#### 📝 Kesimpulan")
-        conclusion = cek_optimization.summarize_forecast(df, forecast, periods)
-        st.info(f"\n{conclusion}")
-
-        growth_percentage, last_leaf_count, max_forecasted_leaf_count = (
-            visualization.calculate_growth_percentage(df, forecast)
-        )
-
-        fig = visualization.plot_growth_bar(
-            growth_percentage, last_leaf_count, max_forecasted_leaf_count, days=periods
-        )
-        st.plotly_chart(fig)
-
-        st.markdown("##### 🔍 Kesimpulan Masing Masing Variabel")
-
-        suggestions = cek_optimization.check_optimization(merged)
-
-        if suggestions:
-            for suggestion in suggestions:
-                st.write(suggestion)
-
-        else:
-            st.subheader(
-                "✅ Semua variabel berada dalam kondisi optimal untuk pertumbuhan tanaman selada."
-            )
-
-        st.markdown("### 🔎 Detail Variabel")
-
-        # display visualization
-
-        selected_feature = st.selectbox(
-            "🎯 Pilih fitur untuk divisualisasikan:", df.columns[1:]
-        )
-
-        visualization.visualize_feature(df, selected_feature)
-
-        st.markdown("#### 🆚 Visualisasi Perbandingan Fitur")
-
-        # Pilih dua fitur yang akan dibandingkan
-        feature_a = st.selectbox("Pilih Fitur A", df.columns[1:])
-        feature_b = st.selectbox("Pilih Fitur B", df.columns[2:])
-
-        if feature_a and feature_b:
-            visualization.visualize_comparison(df, feature_a, feature_b)
 
 
 if __name__ == "__main__":
