@@ -1,23 +1,37 @@
-# First Time Using Project?
+# Hydrosim
 
-I will give you step by step to running this project. Please using Python 3.11.0 - 3.11.9
+<img alt="thumbnail" src="./assets/thumbnail.png">
 
-## Copy or Clone the project
+## Pertama Kali Menggunakan Project Ini?
 
-`git clone https://github.com/Vinzzztty/Forecasting-Hidroponik .`
+Berikut adalah langkah-langkah untuk menjalankan project ini. Pastikan menggunakan Python versi 3.11.0 - 3.11.9.
 
-## Make a virtual-environment first
+### Copy or Clone the project
 
-`python -m venv .venv`
+```bash
+git clone https://github.com/Vinzzztty/Forecasting-Hidroponik .
+```
 
-## Activate virtual-environment
+### Buat virtual-environment terlebih dahulu
 
-`.\.venv\Scripts\activate`
+```bash
+python -m venv .venv
+```
 
-## Install package and dependecies
+### Activate virtual-environment
 
-`pip install -r requirements.txt`
+```bash
+.\.venv\Scripts\activate
+```
 
-## Run the project
+### Install package dan dependecies
 
-`streamlit run main.py`
+```bash
+pip install -r requirements.txt
+```
+
+### Run the project
+
+```bash
+streamlit run Home.py
+```
