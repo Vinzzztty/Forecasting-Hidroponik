@@ -293,11 +293,11 @@ def main():
                 visualization.visualize_comparison(df, feature_a, feature_b)
 
             # Add Quality Prediction Section
-            st.markdown(f"#### Kualitas Tanaman Selada")
+            st.markdown(f"#### Pola Pertumbuhan Tanaman Selada")
 
             # Display loading spinner while the model is being loaded
             with st.spinner("Loading model..."):
-                # Load Model Kualitas Tanaman Selada
+                # Load Model Pola Pertumbuhan Tanaman Selada
                 model_quality, accuracy = model.quality_model()
 
             st.write("Enter the values for prediction")
