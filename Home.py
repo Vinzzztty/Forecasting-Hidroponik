@@ -77,8 +77,8 @@ def main():
         "Model forecasting menggunakan algoritma Prophet menghasilkan metrik evaluasi sebagai berikut:"
     )
 
-    st.markdown("- **RMSE (Root Mean Square Error)**: 1.82")
-    st.markdown("- **MAE (Mean Absolute Error)**: 1.49")
+    st.markdown("- **RMSE (Root Mean Square Error)**: 1.66")
+    st.markdown("- **MAE (Mean Absolute Error)**: 1.26")
 
     st.markdown(
         "Hasil menunjukkan bahwa model memiliki akurasi yang baik dengan kesalahan prediksi yang relatif rendah."
@@ -97,8 +97,8 @@ def main():
     # Data evaluasi model
     data = {
         "Model": ["ARIMA", "Prophet"],
-        "RMSE": [8.970086115676192, 1.8154298562350784],
-        "MAE": [8.170746410714356, 1.4857125402032283],
+        "RMSE": [3.19, 1.66],
+        "MAE": [2.14, 1.26],
     }
 
     # Membuat DataFrame
@@ -121,7 +121,7 @@ def main():
     st.markdown(
         """
         Hasil evaluasi menunjukkan bahwa model Prophet mengungguli model ARIMA dalam metrik RMSE dan MAE.
-        Prophet memiliki RMSE (1.815) dan MAE (1.486) yang lebih rendah dibandingkan dengan ARIMA, yang memiliki RMSE (8.970) dan MAE (8.171).
+        Prophet memiliki RMSE (1.66) dan MAE (1.26) yang lebih rendah dibandingkan dengan ARIMA, yang memiliki RMSE (3.19) dan MAE (2.14).
         Hal ini menunjukkan bahwa model Prophet memberikan prediksi yang lebih akurat.
         """
     )
